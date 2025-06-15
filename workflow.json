@@ -1,0 +1,509 @@
+{
+  "name": "Clip Clap",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "127fdbc9-cfa0-4fd5-a689-be2f9fd21d15",
+      "name": "Telegram Trigger",
+      "webhookId": "f9534209-8360-4530-be43-f7ef98acac50",
+      "credentials": {
+        "telegramApi": {
+          "id": "nP0A7JDZUKiMMNCp",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "dc35fc6f-b97e-471d-8ed5-d4ab8967b339",
+              "name": "le message",
+              "value": "={{ $json.message.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        420,
+        -20
+      ],
+      "id": "f49aadc6-0480-487a-bb52-21545d3d9928",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json[\"le message\"] || $json[\"text\"]}}",
+        "options": {
+          "systemMessage": "# Rôle\nTu es l'assistant personnel d'Asmaa. Ton rôle est de gérer et de récupérer des informations de sa boite mail et de son calendrier. Voici la date et l'heure du jour :{{ $fromMillis($now.setZone(\"Africa/Casablanca\").toMillis() + 86400000).setZone(\"Africa/Casablanca\").toFormat(\"d LLLL yyyy\") }}\n\n\n# Instructions\n## Gestion des mails\nUtilise le tool recupMails pour récuperer la liste des mails.\nUtilise le tool lireMail pour lire à l'utilisateur un mail en particulier. Avant cela, utilise le tool recupMails afin de récupérer l'ID du mail demandé par l'utilisateur. Retourne le mail dans son entièreté, dans sa langue d'origine et sans aucune modification.\nUtilise le tool redigerMail pour rédiger une réponse à un mail et le garder en brouillon. Avant cela, utilise le tool recupMails afin de récupérer l'ID de la conversation à laquelle l'utilisateur veut répondre.\n## Gestion du calendrier\nUtilise le tool recupEvents pour récupérer des évènements programmés dans le calendrier.\nUtilise le tool creerEvents pour créer un nouvel évènement dans le calendrier.\n# Règles\nPrésente les mails dans un format concis et digeste. Lorsque tu récupères la liste des mails, résume le contenu en 1 à 2 phrases faciles à lire. Parle à la deuxième personne, si pertinent.\n# Exemples\nInspire-toi de l'exemple suivant pour présenter à l'utilisateur ses mails:\n<exemple>\nVoici un résumé des derniers emails reçus :\n1️⃣ Sécurité Google – Une activité suspecte a été détectée sur ton compte (nouvelle connexion sur un appareil Windows). Vérifie si c'était bien toi.\n2️⃣ Nick de RSS.app – Ton résumé d’actualités est prêt. De nouveaux articles ont été publiés dans tes flux favoris.\n3️⃣ RSS.app – Confirme ton adresse email pour finaliser ton inscription.\nSi tu veux plus de détails sur un email ou y répondre, fais-moi savoir ! \n</exemple>\nInspire-toi de l'exemple suivant pour présenter à l'utilisateur les évènements de son calendrier:\n<exemple>\nVoici ton programme pour aujourd'hui :\n1. 📿 Miracle Fajr Routine\n   - Heure : 05h00 - 06h00\n   - Description : Activités spirituelles incluant Tahajjud et lecture du Quran.\n2. Regarder un documentaire\n   - Heure : 21h00 - 22h30\n3. Weekly Reset\n   - Heure : 22h30 - 23h45\n   - Description : Évaluer les aspects de vie des \"2025 Goals\" et planifier les objectifs de la semaine suivante.\nAs-tu besoin de plus de détails sur un de ces événements ou souhaites-tu ajouter quelque chose à ton emploi du temps ?\n</exemple>"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        640,
+        -20
+      ],
+      "id": "40a48ed7-3849-4064-af9d-aa3d80ee72cf",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        680,
+        200
+      ],
+      "id": "784129ad-197d-4870-8aa4-ad0fa3b54809",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "Nqnx2ub6mwMNWDcZ",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        800,
+        280
+      ],
+      "id": "fbb1df53-404c-4bb4-a6fb-6af6468675ce",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": 30,
+        "filters": {
+          "labelIds": [
+            "INBOX",
+            "UNREAD"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        900,
+        200
+      ],
+      "id": "eb23896c-f1fa-4e46-816e-45f7a4aee8b1",
+      "name": "RecupMail",
+      "webhookId": "3bfafe92-6250-4a16-b2d7-bd3663072cdc",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "2qEoT6fI5C3T6xNd",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "utilise ce tool pour lire à l'utilisateur un mail en particulier.Retourne le mail dans son entièreté, dans sa langue d'origine et sans aucune modification.",
+        "operation": "get",
+        "messageId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message_ID', `l'ID du maill demandé par l'utilisateur.`, 'string') }}",
+        "simple": false,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        1000,
+        200
+      ],
+      "id": "50e5cb82-faae-4461-adb4-b18e3e43ac2f",
+      "name": "LireMail",
+      "webhookId": "36e7fa4e-cfd1-48d0-bbfb-1e0123444486",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "2qEoT6fI5C3T6xNd",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1000,
+        -20
+      ],
+      "id": "bf2c07f5-3416-41ec-b72c-ba8ea4d77e4f",
+      "name": "Telegram",
+      "webhookId": "3ea369dd-03ec-4e9c-bd78-760f439e02ff",
+      "credentials": {
+        "telegramApi": {
+          "id": "nP0A7JDZUKiMMNCp",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f568b557-5f9f-4ad4-b8ca-f962add95a30",
+              "leftValue": "={{ $json.message.text }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        220,
+        0
+      ],
+      "id": "e6229ba4-19af-49ff-888d-ebf23b8fd866",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.voice.file_id }}"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        340,
+        220
+      ],
+      "id": "a3f96e4f-7b6e-4c91-ae00-f2d058fdb94d",
+      "name": "Telegram1",
+      "webhookId": "c63650dc-20b2-465d-af92-9db83b73e10b",
+      "credentials": {
+        "telegramApi": {
+          "id": "nP0A7JDZUKiMMNCp",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {
+          "language": "fr"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        520,
+        400
+      ],
+      "id": "42de90fe-2363-42db-bfce-b36923e8bc8d",
+      "name": "OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "2FkS4JbEFKm4qb8l",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', `l'ID de la conversation à laquelle l'utilisateur est en train de répondre.`, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        1100,
+        200
+      ],
+      "id": "d932816b-9780-4140-bff3-7fbbf0b84afd",
+      "name": "redigerMail",
+      "webhookId": "ef5c263a-fe5a-44f9-b567-1eeac6b5e55d",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "2qEoT6fI5C3T6xNd",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Présente chaque événement avec son titre et une brève description d'une phrase .",
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "asmaaelbou200@gmail.com",
+          "mode": "list",
+          "cachedResultName": "asmaaelbou200@gmail.com"
+        },
+        "timeMin": "={{ (() => {\n  const raw = $fromAI('After', 'la date à partir de laquelle commencer la recherche', 'string');\n  const date = new Date(raw);\n  if (date.getFullYear() < 2025) date.setFullYear(2025);\n  return date.toISOString();\n})() }}",
+        "timeMax": "={{ (() => {\n  const raw = $fromAI('Before', 'la date jusqu’à laquelle chercher les événements', 'string');\n  const date = new Date(raw);\n  if (date.getFullYear() < 2025) date.setFullYear(2025);\n  return date.toISOString();\n})() }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        1280,
+        60
+      ],
+      "id": "890127c3-e015-4471-9739-deb8398d52a0",
+      "name": "recupEvent",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "RNREgi8z3kAzttBT",
+          "name": "Google Calendar account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "L'utilisateur a dit : \"{{ $json.message }}\"\n\nTa tâche :\n- Extrais le **titre de l'événement** (ex: \"entretien\", \"cours de natation\", \"appel\", etc.)\n- Déduis la **date et l'heure de début** et la **durée**\n- Si l’année est absente ou dans le passé, utilise 2025\n- Renvoie : un titre, une date ISO pour le début, une date ISO pour la fin (selon la durée ou par défaut 1h), et un résumé facultatif\n- Ne pose pas de question à l'utilisateur. Juste remplir les champs.\n",
+        "calendar": {
+          "__rl": true,
+          "value": "asmaaelbou200@gmail.com",
+          "mode": "list",
+          "cachedResultName": "asmaaelbou200@gmail.com"
+        },
+        "start": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Start', ``, 'string') }}",
+        "end": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('End', ``, 'string') }}",
+        "additionalFields": {
+          "summary": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Summary', ``, 'string') }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        1280,
+        260
+      ],
+      "id": "03e9dae3-03c1-4083-8452-0368f7f89295",
+      "name": "Google Calendar",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "RNREgi8z3kAzttBT",
+          "name": "Google Calendar account 3"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RecupMail": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LireMail": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram1": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "redigerMail": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "recupEvent": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "3939f83d-2b17-496a-bcf2-1b78e383cc83",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d0a7a79b09c2317f4e3d71a07200c3b1388b23847d625a461764d6d61ce4a1ee"
+  },
+  "id": "6BBU4KZhLnbkWgQU",
+  "tags": []
+}
