@@ -18,8 +18,8 @@ Ce projet utilise **n8n** pour créer un assistant IA connecté à Telegram, Gma
 
 Voici un aperçu du scénario n8n utilisé :
 
-![Uploading image.png…]()
 
+![Uploading workflow.png…]()
 
 ---
 
