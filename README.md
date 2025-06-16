@@ -48,9 +48,9 @@ Le workflow traite la requête, interagit avec l’agent OpenAI, récupère les 
 
 ---
 
-## 📷 Captures d'écran
+## Demo
 
-_(Ajoute ici d'autres images si tu veux)_
+
 
 ---
 
